@@ -1,0 +1,66 @@
+-hosts: all
+ become_user: root
+
+ tasks:
+
+   #task for create groups
+   -name: add a group
+    group:
+     name={{ item }}
+     state=present
+    with_items:
+     -group1
+     -grpup2
+     -group3
+    tags: add_new_group
+
+  #task for add several users
+   -name: add several users
+    user:
+     name={{ item }}
+     state=present
+     groups=group1
+     password="testpassword"
+     shell=/bin/bash
+    with_items:
+     -usertest1
+     -usertest2
+     -usertest3
+    tags: add_new_user
+
+   #task for generate public ke for user
+   -name: generate ssh key for a user
+   group:
+     name={{ item }}
+     generate_ssh_key=yes
+     ssh_key_bits=4096
+     ssh_key_file=.ssh/id_rsa
+    with_items:
+     -usertest1
+    tags: generate_ssh_keys
+
+   #task for copy public key to user account
+   -name: update authorized key for a user
+    authorized_key:
+     user: usertest1
+     state: present
+     key: "{{ loopkup('file', 'home/usertest1/.ssh/id_rsa.pub')  }}"
+    tags: copy_pub_key
+
+   #task for delete several user
+   -name: delete a several user
+    user:
+     name={{ item }}
+     state=absent
+    with_items:
+     -usertest2
+    tags: remove_user
+
+   #task for delete several user        
+   -name: delete a several user
+    group:
+     name={{ item }}
+     state=absent
+    with_items:
+     -group2
+    tags: remove_group
